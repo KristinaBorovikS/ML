@@ -1,0 +1,217 @@
+import numpy as np
+
+def add_none_values(df,x):
+    for i in range(0, 500):
+        df.at[i, x.name] = 0
+    df = df.replace([0], [None])
+    print(f"Данные с пропущенными значениями:")
+    print(df.head())
+    print(df.info())
+    df = df.fillna(value=np.nan)
+    print(f"Наличие значения NaN:")
+    print(df.head())
+    print(df.isna())
+    return df
+
+def fill_gaps_median(df,x):
+    df[x.name] = df[x.name].fillna(df[x.name].median())
+    print(f"Данные с медианными значениями:")
+    print(df.head())
+
+def fill_gaps_mean(df,x):
+    df[x.name] = df[x.name].fillna(df[x.name].mean())
+    print(f"Данные со средними значениями:")
+    print(df.head())
+
+def fill_gaps_mode(df,x):
+    df[x.name] = df[x.name].fillna(df[x.name].mode().iloc[0])
+    print(f"Данные с наиболее часто встречающимися значениями:")
+    print(df.head())
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+def visual_histogram(x,num,color):
+    plt.hist(x, bins= num, histtype='barstacked', color=color, edgecolor='cyan', alpha=1)
+    plt.xlabel(x.name)
+    plt.ylabel('quantity')
+    plt.title("Coffee Shop Dataset")
+    plt.show()
+
+def visual_kde(df,x):
+    sns.displot(df, x=x , kind="kde", bw_adjust=1.2, fill=True)
+    plt.show()
+
+def visual_distribution(df,x,y):
+    sns.relplot(data=df, x=x, y=y)
+    plt.show()
+
+def visual_fancy_scatterplot(df,x,y,size,hue):
+    sns.set_theme(style="whitegrid")
+    cmap = sns.cubehelix_palette(rot=-.2, as_cmap=True)
+    g = sns.relplot(
+        data=df.head(50),
+        x=x, y=y, size=size,
+        hue=hue,
+        palette=cmap, sizes=(10, 500),
+    )
+    g.set(xscale="log", yscale="log")
+    g.ax.xaxis.grid(True, "minor", linewidth=.25)
+    g.ax.yaxis.grid(True, "minor", linewidth=.25)
+    g.despine(left=True, bottom=True)
+    plt.show()
+
+def visual_boxplot(df,x,color):
+    sns.boxplot(data=df, x=x, color=color, linecolor="#137", linewidth=.75)
+    plt.show()
+
+def visual_predictions(y_true, y_pred, num_points ,xlabel,ylabel,title):
+    plt.figure(figsize=(10, 6))
+    plt.scatter(range(num_points), y_true[:num_points], color='green', label='Истинные значения')
+    plt.scatter(range(num_points), y_pred[:num_points], color='orange', label='Предсказанные значения')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title+"первые  "+str(num_points)+"  точек")
+    plt.legend()
+    plt.show()
+
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
+
+def load_data(file_path):
+    return pd.read_csv(file_path)
+
+def preprocess_data(df, target_column):
+    from sklearn.preprocessing import StandardScaler
+    df_scaled = pd.DataFrame(StandardScaler().fit_transform(df),columns=df.columns)
+    X = df_scaled.drop(columns=[target_column])
+    y = df_scaled[target_column]
+
+    numeric_features = ['Number_of_Customers_Per_Day', 'Average_Order_Value', 'Operating_Hours_Per_Day','Number_of_Employees','Marketing_Spend_Per_Day','Location_Foot_Traffic']
+    numeric_transformer = StandardScaler()
+    preprocessor = ColumnTransformer( transformers=[ ('num', numeric_transformer, numeric_features)])
+
+    X_processed = preprocessor.fit_transform(X)
+    return X_processed, y, preprocessor
+
+
+def train_model(X, y):
+    model = LinearRegression()
+    model.fit(X, y)
+    return model
+
+def predict(model, X):
+    return model.predict(X)
+
+def evaluate_model(y_true, y_pred):
+    mse = mean_squared_error(y_true, y_pred)
+    r2 = r2_score(y_true, y_pred)
+    return mse, r2
+
+def get_result(df,target):
+    X, y, preprocessor = preprocess_data(df, target)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.30, random_state=0)
+    model = train_model(X_train, y_train)
+    y_pred = predict(model, X_test)
+    mse, r2 = evaluate_model(y_test, y_pred)
+    return mse, r2, y_pred,y_test
+
+
+import model_interface_hw2 as ml
+import matplotlib.pyplot as plt
+import visualization_interface_hw2 as vs
+import add_none_values_interface as non
+import fill_gaps_interface as fg
+
+
+file_path = r'C:\Users\Кристина\Desktop\coffee_shop_revenue.csv'
+df = ml.load_data(file_path)
+
+if df.empty:
+    print('DataFrame is empty!')
+
+print(df.head())
+print(df.info())
+
+
+a = df['Number_of_Customers_Per_Day']
+b = df['Average_Order_Value']
+c = df['Operating_Hours_Per_Day']
+d = df['Number_of_Employees']
+e = df['Marketing_Spend_Per_Day']
+f = df['Location_Foot_Traffic']
+target_column = 'Daily_Revenue'
+
+vs.visual_histogram(a,25,"green")
+vs.visual_histogram(b,20,"blue")
+vs.visual_histogram(c,10,"orange")
+vs.visual_histogram(d,10,"magenta")
+vs.visual_histogram(e,25,"pink")
+vs.visual_histogram(f,20,"cyan")
+
+vs.visual_kde(df,target_column)
+
+vs.visual_distribution(df,a.name,target_column)
+vs.visual_distribution(df,b.name,target_column)
+vs.visual_distribution(df,c.name,target_column)
+vs.visual_distribution(df,f.name,target_column)
+vs.visual_distribution(df,f.name,a.name)
+
+vs.visual_fancy_scatterplot(df,b.name,f.name,a.name,target_column)
+
+vs.visual_boxplot(df,target_column,"grey")
+vs.visual_boxplot(df,a.name,"green")
+vs.visual_boxplot(df,b.name,"blue")
+vs.visual_boxplot(df,c.name,"orange")
+vs.visual_boxplot(df,d.name,"magenta")
+vs.visual_boxplot(df,e.name,"pink")
+vs.visual_boxplot(df,f.name,"cyan")
+
+
+
+mse, r2,y_pred,y_test = ml.get_result(df,target_column)
+print(f"------------------------------------------------------Среднеквадратичная ошибка: {mse:.2f}")
+print(f"------------------------------------------------------Коэффициент детерминации R^2: {r2:.2f}")
+
+vs.visual_predictions(y_test,y_pred,50,'Индекс','Значение выручки','Истинные и предсказанные значения выручки за день ')
+
+
+df = non.add_none_values(df,a)
+fg.fill_gaps_median(df,a)
+vs.visual_kde(df,a.name)
+mse, r2,y_pred,y_test = ml.get_result(df,target_column)
+print(f"Среднеквадратичная ошибка на данных с заполненными медианой пропущенными значениями: {mse:.2f}")
+print(f"Коэффициент детерминации R^2 на данных с заполненными медианой пропущенными значениями: {r2:.2f}")
+
+vs.visual_predictions(y_test,y_pred,50,'Индекс','Значение выручки','Истинные и предсказанные значения выручки за день(с заполненными медианой пропущенными значениями)  ')
+
+
+df = ml.load_data(file_path)
+print(df.head())
+print(df.info())
+
+
+df = non.add_none_values(df,a)
+fg.fill_gaps_mean(df,a)
+vs.visual_kde(df,a.name)
+mse, r2,y_pred,y_test = ml.get_result(df,target_column)
+print(f"Среднеквадратичная ошибка на данных с заполненными средним пропущенными значениями: {mse:.2f}")
+print(f"Коэффициент детерминации R^2 на данных с заполненными средним пропущенными значениями: {r2:.2f}")
+
+vs.visual_predictions(y_test,y_pred,50,'Индекс','Значение выручки','Истинные и предсказанные значения выручки за день(с заполненными средним пропущенными значениями)  ')
+
+df = non.add_none_values(df,a)
+fg.fill_gaps_mode(df,a)
+vs.visual_kde(df,a.name)
+mse, r2,y_pred,y_test = ml.get_result(df,target_column)
+print(f"Среднеквадратичная ошибка на данных с заполненными наиболее часто встречающимся пропущенными значениями: {mse:.2f}")
+print(f"Коэффициент детерминации R^2 на данных с заполненными наиболее часто встречающимся пропущенными значениями: {r2:.2f}")
+
+vs.visual_predictions(y_test,y_pred,50,'Индекс','Значение выручки','Истинные и предсказанные значения выручки за день(с заполненными наиболее часто встречающимся пропущенными значениями)  ')
