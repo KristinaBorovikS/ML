@@ -59,8 +59,8 @@ vs.visual_predictions(y_test,y_pred,50,'Индекс','Значение выру
 
 
 df = non.add_none_values(df,a)
-vs.visual_kde(df,a.name)
 fg.fill_gaps_median(df,a)
+vs.visual_kde(df,a.name)
 mse, r2,y_pred,y_test = ml.get_result(df,target_column)
 print(f"Среднеквадратичная ошибка на данных с заполненными медианой пропущенными значениями: {mse:.2f}")
 print(f"Коэффициент детерминации R^2 на данных с заполненными медианой пропущенными значениями: {r2:.2f}")
@@ -74,8 +74,8 @@ print(df.info())
 
 
 df = non.add_none_values(df,a)
-vs.visual_kde(df,a.name)
 fg.fill_gaps_mean(df,a)
+vs.visual_kde(df,a.name)
 mse, r2,y_pred,y_test = ml.get_result(df,target_column)
 print(f"Среднеквадратичная ошибка на данных с заполненными средним пропущенными значениями: {mse:.2f}")
 print(f"Коэффициент детерминации R^2 на данных с заполненными средним пропущенными значениями: {r2:.2f}")
@@ -83,8 +83,8 @@ print(f"Коэффициент детерминации R^2 на данных с
 vs.visual_predictions(y_test,y_pred,50,'Индекс','Значение выручки','Истинные и предсказанные значения выручки за день(с заполненными средним пропущенными значениями)  ')
 
 df = non.add_none_values(df,a)
-vs.visual_kde(df,a.name)
 fg.fill_gaps_mode(df,a)
+vs.visual_kde(df,a.name)
 mse, r2,y_pred,y_test = ml.get_result(df,target_column)
 print(f"Среднеквадратичная ошибка на данных с заполненными наиболее часто встречающимся пропущенными значениями: {mse:.2f}")
 print(f"Коэффициент детерминации R^2 на данных с заполненными наиболее часто встречающимся пропущенными значениями: {r2:.2f}")
